@@ -1,0 +1,23 @@
+---
+- name: Install epel
+  yum:
+    name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+  become: yes
+
+- name: Install nginx
+  yum:
+    name: nginx
+  become: yes
+
+- name: Start Nginx
+  systemd:
+    name: nginx
+    state: started
+    enabled: yes
+  become: yes
+
+- name: Configure root page
+  copy:  
+    src: index.html
+    dest: /usr/share/nginx/html
+  become: yes

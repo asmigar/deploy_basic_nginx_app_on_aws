@@ -1,0 +1,6 @@
+---
+- name: Save the private key into pem file
+  copy: 
+    dest: ./basic_app_key.pem
+    content: "{{ basic_app_key.key.private_key }}"
+    mode: '400'

@@ -1,0 +1,118 @@
+---
+- name: Create VPC
+  ec2_vpc_net:
+    name: basic_app
+    profile: "{{ aws_profile }}"
+    cidr_block: 10.0.0.0/16
+    region: "{{ aws_region }}"
+    tags:
+      module: ec2_vpc_net
+  register: basic_app_vpc
+
+- name: Create Internet Gateway
+  ec2_vpc_igw:
+    profile: "{{ aws_profile }}"
+    region: "{{ aws_region }}"
+    vpc_id: "{{ basic_app_vpc.vpc.id }}"
+    tags:
+      module: ec2_vpc_igw
+      Name: basic_app
+  register: igw
+
+- name: Create subnet
+  ec2_vpc_subnet:
+    profile: "{{ aws_profile }}"
+    region: "{{ aws_region }}"
+    vpc_id: "{{ basic_app_vpc.vpc.id }}"
+    cidr: 10.0.0.0/24
+    map_public: yes
+    tags:
+      Name: basic_app
+      module: ec2_vpc_subnet
+  register: basic_app_subnet
+
+- name: Set up public subnet route table
+  ec2_vpc_route_table:
+    profile: "{{ aws_profile }}"
+    region: "{{ aws_region }}"
+    vpc_id: "{{ basic_app_vpc.vpc.id }}"
+    tags:
+      Name: basic_app
+      module: ec2_vpc_route_table
+    subnets:
+      - "{{ basic_app_subnet.subnet.id }}"
+    routes:
+      - dest: 0.0.0.0/0
+        gateway_id: "{{ igw.gateway_id }}"
+  register: public_route_table
+
+- name: Get controller machine public IP
+  ipify_facts:
+
+- name: Create Security Group/Firewall
+  ec2_group:
+    name: basic_app
+    description: sg for basic app
+    vpc_id: "{{ basic_app_vpc.vpc.id }}"
+    profile: "{{ aws_profile }}"
+    region: "{{ aws_region }}"
+    rules:
+      - proto: tcp
+        ports:
+        - 22
+        cidr_ip: "{{ ipify_public_ip }}/32"
+        rule_desc: allow ssh from my ansible controller machine
+      - proto: tcp
+        ports:
+        - 80
+        cidr_ip: 0.0.0.0/0
+        rule_desc: allow web access from anywhere
+    rules_egress:
+      - proto: tcp
+        ports: 
+          - 80
+          - 443
+        cidr_ip: 0.0.0.0/0
+        rule_desc: allow http and https to outside world
+  register: basic_app_sg
+
+
+- name: Create ssh keypair
+  ec2_key:
+    name: basic_app_key
+    profile: "{{ aws_profile }}"
+    region: "{{ aws_region }}"
+  register: basic_app_key
+  notify: Save the private key into pem file
+
+- ec2:
+    key_name: "{{ basic_app_key.key.name }}"
+    profile: "{{ aws_profile }}"
+    region: "{{ aws_region }}"
+    instance_type: t2.micro
+    image: ami-02354e95b39ca8dec
+    group: "{{ basic_app_sg.group_name}}"
+    exact_count: 1
+    count_tag:
+      Name: basic_app
+    vpc_subnet_id: "{{ basic_app_subnet.subnet.id }}"
+    wait: yes
+    instance_tags:
+      Name: basic_app
+      organistaion: TAP
+      module: ec2
+  register: basic_app_ec2
+
+- name: Add ec2 instance to in-memory inventory
+  add_host:
+    name: "{{ basic_app_ec2.tagged_instances[0].public_ip }}"
+    groups: aws_ec2
+    ansible_user: ec2-user  
+    ansible_ssh_private_key_file: "{{ inventory_dir }}/basic_app_key.pem"
+
+- name: Wait for SSH to come up on newly created ec2 instance
+  delegate_to: "{{ basic_app_ec2.tagged_instances[0].public_ip }}"
+  wait_for_connection:
+    delay: 10
+    timeout: 300
+
