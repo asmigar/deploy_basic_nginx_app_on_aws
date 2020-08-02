@@ -21,3 +21,4 @@
     src: index.html
     dest: /usr/share/nginx/html
   become: yes
+  notify: Restart nginx

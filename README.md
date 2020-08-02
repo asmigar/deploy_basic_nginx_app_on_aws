@@ -51,7 +51,7 @@ aws_secret_access_key = <AWS_SECRET_ACCESS_KEY_CREATED_ON_AWS_CONSOLE>
 ansible-playbook playbook.yml
 ```
 
-Once, this is playbook successfully gets executed. One can access the static HTML page on browser. The IP serving the request can be found at the end of ansible-playbook execution logs. 
+Once, this playbook successfully gets executed, access the static HTML page on browser. The IP serving the request can be found at the end of ansible-playbook execution logs. 
 
 ## TODO
 
