@@ -58,4 +58,5 @@ Once, this playbook successfully gets executed, access the static HTML page on b
 * If the ssh keys are compromised and one needs to rotate it. Existing instance would not be bounced. And the private key would be lost. Hence, the instances couldn't be sshed. 
 * The nginx provisioning part can be done through ec2 instance's user data. The user data would run ansible in pull mode from github. This will remove coupling between infra provisioning and nginx provisioning. 
 * Set up Route53 hosted zone for routing subdomain rather than using IP.  
+* Create a destroy playbook for destroying the whole infra.
 
