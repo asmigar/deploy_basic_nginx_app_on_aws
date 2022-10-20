@@ -4,9 +4,3 @@
     dest: ./basic_app_key.pem
     content: "{{ basic_app_key.key.private_key }}"
     mode: '400'
-
-- name: Wait for SSH to come up on newly created ec2 instance
-  delegate_to: "{{ basic_app_ec2.tagged_instances[0].public_ip }}"
-  wait_for_connection:
-    delay: 10
-    timeout: 300
