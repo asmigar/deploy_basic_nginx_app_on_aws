@@ -1,9 +1,4 @@
 ---
-- name: Install epel
-  yum:
-    name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-  become: yes
-
 - name: Install nginx
   yum:
     name: nginx
