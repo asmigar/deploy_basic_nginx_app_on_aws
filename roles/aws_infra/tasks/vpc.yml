@@ -2,7 +2,6 @@
 - name: Create VPC
   ec2_vpc_net:
     name: basic_app
-    profile: "{{ aws_profile }}"
     cidr_block: 10.0.0.0/16
     region: "{{ aws_region }}"
     tags:
@@ -11,7 +10,6 @@
 
 - name: Create Internet Gateway
   ec2_vpc_igw:
-    profile: "{{ aws_profile }}"
     region: "{{ aws_region }}"
     vpc_id: "{{ basic_app_vpc.vpc.id }}"
     tags:
@@ -21,7 +19,6 @@
 
 - name: Create subnet
   ec2_vpc_subnet:
-    profile: "{{ aws_profile }}"
     region: "{{ aws_region }}"
     vpc_id: "{{ basic_app_vpc.vpc.id }}"
     cidr: 10.0.0.0/24
@@ -33,7 +30,6 @@
 
 - name: Set up public subnet route table
   ec2_vpc_route_table:
-    profile: "{{ aws_profile }}"
     region: "{{ aws_region }}"
     vpc_id: "{{ basic_app_vpc.vpc.id }}"
     tags:

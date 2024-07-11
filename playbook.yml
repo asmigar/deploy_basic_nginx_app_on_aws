@@ -6,6 +6,6 @@
 
 
 - hosts: aws_ec2
-  
+
   roles:
     - nginx

@@ -3,20 +3,20 @@
   import_tasks: vpc.yml
 
 - name: Get controller machine public IP
-  ipify_facts:
+  command: curl -4 https://api.ipify.org/
+  register: public_ip
 
 - name: Create Security Group/Firewall
   ec2_group:
     name: basic_app
     description: sg for basic app
     vpc_id: "{{ basic_app_vpc.vpc.id }}"
-    profile: "{{ aws_profile }}"
     region: "{{ aws_region }}"
     rules:
       - proto: tcp
         ports:
         - 22
-        cidr_ip: "{{ ipify_public_ip }}/32"
+        cidr_ip: "{{ public_ip.stdout }}/32"
         rule_desc: allow ssh from my ansible controller machine
       - proto: tcp
         ports:
@@ -36,7 +36,6 @@
 - name: Create ssh keypair
   ec2_key:
     name: basic_app_key
-    profile: "{{ aws_profile }}"
     region: "{{ aws_region }}"
   register: basic_app_key
   notify: Save the private key into pem file
@@ -44,10 +43,9 @@
 - name: Create EC2 instance for basic app
   ec2_instance:
     key_name: "{{ basic_app_key.key.name }}"
-    profile: "{{ aws_profile }}"
     region: "{{ aws_region }}"
     instance_type: t2.micro
-    image_id: ami-02354e95b39ca8dec
+    image_id: ami-0b72821e2f351e396
     security_group:  "{{ basic_app_sg.group_id }}"
     exact_count: 1
     vpc_subnet_id: "{{ basic_app_subnet.subnet.id }}"
